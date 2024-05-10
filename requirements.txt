@@ -1,0 +1,4 @@
+asyncio
+aiogram<4.0
+python-dotenv
+fake_useragent
