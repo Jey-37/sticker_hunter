@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from datetime import datetime
 from typing import Any
 
 import aiohttp
@@ -23,7 +24,10 @@ class BuffParser():
         item_buff_api_url = f"https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id={item_id}&page_num=1&sort_by=default&mode=&allow_tradable_cooldown=1&_=1714321866242"
         
         items_data = []
-        headers = {'User-Agent': self.ua.random}
+        headers = {
+            "User-Agent": self.ua.random,
+            "Locale-Supported": "en",
+        }
 
         async with session.get(item_buff_api_url, headers=headers) as response:
             if response.ok:
@@ -36,7 +40,10 @@ class BuffParser():
                     stickers_data = []
                     stickers_sum_price = 0
                     for sticker in item['asset_info']['info']['stickers']:
-                        sticker_info = self.stickers.get(sticker['name'], None)
+                        sticker_info = self.stickers.get(sticker['name'].lower().replace("  ", " "), None)
+                        if sticker_info is None:
+                            self.logger.info(f"Unknown sticker showed up: {sticker['name']}")
+                            break
 
                         sticker_price = 0
                         if sticker_info and 'price' in sticker_info:
@@ -66,7 +73,9 @@ class BuffParser():
                             "sticker_price": round(stickers_sum_price, 2),
                             "stickers": stickers_data,
                             "asset_info": item['asset_info'],
-                            "sell_order_id": item["id"]
+                            "sell_order_id": item['id'],
+                            "created_at": datetime.fromtimestamp(item['created_at']),
+                            "updated_at": datetime.fromtimestamp(item['updated_at']),
                         }
 
                         items_data.append(item_info)

@@ -30,8 +30,12 @@ class StickerPriceUpdater():
 
     async def get_sticker_price(self, item_id: int, session, retry: int = 3) -> float:
         item_buff_api_url = f"https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id={item_id}&page_num=1&sort_by=default&mode=&allow_tradable_cooldown=1&_=1714321866242"
-
-        async with session.get(item_buff_api_url, headers={'User-Agent': self.ua.random}) as response:
+        headers = {
+            "User-Agent": self.ua.random,
+            "Locale-Supported": "en",
+        }
+        
+        async with session.get(item_buff_api_url, headers=headers) as response:
             if response.ok:
                 item_buff_data = (await response.json())['data']
             

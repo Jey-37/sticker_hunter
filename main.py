@@ -46,9 +46,7 @@ async def main():
     stickers = read_json('data\\stickers.json')
 
     loop = asyncio.get_event_loop()
-    loop.create_task(config.dp.start_polling(config.bot))
     loop.create_task(sticker_price_updater_task(stickers))
-    await asyncio.sleep(3)
     loop.create_task(buff_parser_task(stickers))
 
 
