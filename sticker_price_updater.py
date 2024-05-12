@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 from typing import Any
 
@@ -8,6 +7,8 @@ from fake_useragent import UserAgent
 
 
 class StickerPriceUpdater():
+    ITEM_API_URL_TEMPLATE = "https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id={item_id}&page_num=1&sort_by=default&mode=&allow_tradable_cooldown=1&_=1714321866242"
+
     def __init__(self, stickers: dict[str:dict[str:Any]]):
         self.stickers = stickers
 
@@ -16,7 +17,6 @@ class StickerPriceUpdater():
         self.timeout_time = 10
 
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.setLevel(logging.WARNING)
 
     '''def get_sticker_price_by_history(self, item_id: int) -> float:
         item_trade_history_url = f"https://buff.163.com/api/market/goods/bill_order?game=csgo&goods_id={item_id}&_=1715161647506"
@@ -29,13 +29,14 @@ class StickerPriceUpdater():
         return 0'''
 
     async def get_sticker_price(self, item_id: int, session, retry: int = 3) -> float:
-        item_buff_api_url = f"https://buff.163.com/api/market/goods/sell_order?game=csgo&goods_id={item_id}&page_num=1&sort_by=default&mode=&allow_tradable_cooldown=1&_=1714321866242"
+        url = StickerPriceUpdater.ITEM_API_URL_TEMPLATE.format(item_id=item_id)
+
         headers = {
             "User-Agent": self.ua.random,
             "Locale-Supported": "en",
         }
         
-        async with session.get(item_buff_api_url, headers=headers) as response:
+        async with session.get(url, headers=headers) as response:
             if response.ok:
                 item_buff_data = (await response.json())['data']
             
@@ -43,7 +44,7 @@ class StickerPriceUpdater():
                     return float(item_buff_data['items'][0]['price'])
             else:
                 if retry > 0:
-                    self.logger.info(f'retry={retry} => {item_buff_api_url}')
+                    self.logger.info(f'retry={retry} => {url}')
                     await asyncio.sleep(self.timeout_time)
                     return await self.get_sticker_price(item_id=item_id, session=session, retry=(retry - 1))
                 

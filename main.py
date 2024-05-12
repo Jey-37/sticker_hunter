@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import random
 import json
 
 import config
@@ -6,7 +8,6 @@ from sticker_price_updater import StickerPriceUpdater
 from buff_parser import BuffParser
 from notifying import BotNotifier
 import message_handlers
-
 
 
 def read_json(file_name: str):
@@ -20,12 +21,13 @@ def write_json(file_name: str, data):
 
 async def sticker_price_updater_task(stickers):
     sticker_updater = StickerPriceUpdater(stickers)
+    logging.getLogger("StickerPriceUpdater").setLevel(logging.WARNING)
 
     try:
         while True:
             await sticker_updater.fetch_sticker_prices()
             write_json('data\\stickers.json', stickers)
-            await asyncio.sleep(3600)
+            await asyncio.sleep(7200)
     finally:
         write_json('data\\stickers.json', stickers)
 
@@ -33,6 +35,7 @@ async def sticker_price_updater_task(stickers):
 async def buff_parser_task(stickers):
     with open('data\\itemids.txt', 'r') as file:
         items = [line.strip().split(';') for line in file]
+    random.shuffle(items)
 
     users = [404404154, 497136005]
     notifier = BotNotifier(config.bot, users)
